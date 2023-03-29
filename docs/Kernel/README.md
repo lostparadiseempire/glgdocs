@@ -57,6 +57,23 @@ void OnDestroy()
 
 ### Analytics
 Обёртка сервисов аналитики. Дает возможность отправлять сообщения сразу во все сервисы аналитики.
+
+На данный момент доступны 2 адаптера: Facebook, AppMetrica. 
+Чтобы начать их использовать, необходимо сначала импортировать все необходимые ресурсы от поставщиков аналитики,
+затем в Scripting Define Symbols добавить AppMetrica и Facebook.
+
+Для отправки сообщений используются следующие методы:
+```csharp
+Kernel.Analytics.Track("eventId"); // Отправка события без параметров
+Kernel.Analytics.Track("eventId", "paramName", "paramValue"); // Отправка события с одним параметром
+Kernel.Analytics.Track("eventId", ("paramName1","paramValue1"), ("paramName2","paramValue2")); // Отправка события с массивом параметров
+Kernel.Analytics.Track("eventId", new Dictionary<string, object> {...}); // Отправка события со словарем параметров
+```
+
+Для некоторых поставщиков аналитики (например AppMetrika) иногда требуется принудительная отправка сообщений:
+```csharp
+Kernel.Analytics.Flush();
+```
 ### Config
 Контейнер для файлов конфигураций.
 
@@ -64,7 +81,104 @@ void OnDestroy()
 Сервис обработки и хранения внутриигровых валют.
 
 ### Inventory
-Сервис для работы с инвентарями.
+Сервис для работы с инвентарями. 
+Система позволяет работать с несколькими инвентарями, в кажом из которых содержатся предметы определенного типа. 
+Типы предмета содержатся в перечислении EntityKind. 
+После добавления нового типа предметов необходимо прописать его в методе EntityData.GetKinds() по аналогии с остальными типами.
+
+При сохранении обрабатываются только измененные инвентари, что гарантирует низкие затраты ресурсов даже при наличии множества типов предметов.
+
+
+#### Загрузка и сохранение
+ предметов инвентаря
+```csharp
+// Идентификатор набора инвентарей.
+string inventoryIdentifier = "mainInventory_";
+
+// Загружает набор инвентарей с указанным идентификатором
+Kernel.Inventory.Load(inventoryIdentifier); 
+
+// Сохраняет измененные инвентари
+Kernel.Inventory.Save(); 
+```
+#### Получение
+ предметов инвентаря
+```csharp
+// Тип инвентаря.
+EntityKind entityKind = EntityKind.Weapon; 
+// Универсальный ключ искомого предмета.
+string universalKey = "grenade"; 
+// Данные искомого предмета.
+EntityData entityData = someWeapon.GetComponent<EntityData>(); 
+
+// Получает количество указанных предметов.
+Kernel.Inventory.GetItems(entityKind, universalKey); 
+
+// Получает количество указанных предметов.
+Kernel.Inventory.GetItems(entityData); 
+
+// Получает весь инвентарь указанного типа.
+Kernel.Inventory.GetInventory(entityKind); 
+```
+#### Добавление
+ предметов в инвентарь
+```csharp
+// Тип инвентаря.
+EntityKind entityKind = EntityKind.Weapon; 
+// Универсальный ключ искомого предмета.
+string universalKey = "grenade"; 
+// Данные искомого предмета.
+EntityData entityData = someWeapon.GetComponent<EntityData>(); 
+
+// Добавляет указанное количество предметов в инвентарь.
+Kernel.Inventory.AddItems(entityKind, universalKey, value); 
+
+// Добавляет указанное количество предметов в инвентарь.
+Kernel.Inventory.AddItems(entityData, value); 
+```
+#### Установка количества
+ предметов в инвентаре
+```csharp
+// Тип инвентаря.
+EntityKind entityKind = EntityKind.Weapon; 
+// Универсальный ключ искомого предмета.
+string universalKey = "grenade"; 
+// Данные искомого предмета.
+EntityData entityData = someWeapon.GetComponent<EntityData>(); 
+
+Kernel.Inventory.SetItems(entityKind, universalKey, value); // 
+Kernel.Inventory.SetItems(entityData, value); // 
+```
+#### Удаление
+ предметов из инвентаря
+```csharp
+// Тип инвентаря.
+EntityKind entityKind = EntityKind.Weapon; 
+// Универсальный ключ искомого предмета.
+string universalKey = "grenade"; 
+// Данные искомого предмета.
+EntityData entityData = someWeapon.GetComponent<EntityData>(); 
+
+// Удаляет указанное количество предметов из инвентаря.
+Kernel.Inventory.RemoveItems(EntityKind entityKind, string universalKey, int value);
+// Удаляет указанное количество предметов из инвентаря.
+Kernel.Inventory.RemoveItems(EntityData entityData, int value);
+```
+#### Подписка на изменение
+ предметов в инвентаре
+```csharp
+// Тип инвентаря.
+EntityKind entityKind = EntityKind.Weapon;
+// Метод будет выполняться при изменении инвентаря
+void InventoryChangedHandler()
+{
+	// do smth
+}
+// Подписывается на событие изменения определенного типа предметов в инвентаре.
+Kernel.Inventory.SubscribeToInventoryChanges(EntityKind entityKind, System.Action<string, int> callback);
+// Отписывается от события изменения определенного типа предметов в инвентаре.
+Kernel.Inventory.UnsubscribeFromInventoryChanges(EntityKind entityKind, System.Action<string, int> callback);
+```
 
 ### LevelsManager
 Сервис переключения игровых уровней.
