@@ -83,10 +83,17 @@ void OnDestroy()
 
 Для отправки сообщений используются следующие методы:
 ```csharp
-Kernel.Analytics.Track("eventId"); // Отправка события без параметров
-Kernel.Analytics.Track("eventId", "paramName", "paramValue"); // Отправка события с одним параметром
-Kernel.Analytics.Track("eventId", ("paramName1","paramValue1"), ("paramName2","paramValue2")); // Отправка события с массивом параметров
-Kernel.Analytics.Track("eventId", new Dictionary<string, object> {...}); // Отправка события со словарем параметров
+// Отправка события без параметров
+Kernel.Analytics.Track("eventId"); 
+
+// Отправка события с одним параметром
+Kernel.Analytics.Track("eventId", "paramName", "paramValue"); 
+
+// Отправка события с массивом параметров
+Kernel.Analytics.Track("eventId", ("paramName1","paramValue1"), ("paramName2","paramValue2")); 
+
+// Отправка события со словарем параметров
+Kernel.Analytics.Track("eventId", new Dictionary<string, object> {...}); 
 ```
 
 Для некоторых поставщиков аналитики (например AppMetrika) иногда требуется принудительная отправка сообщений:
@@ -97,7 +104,33 @@ Kernel.Analytics.Flush();
 Контейнер для файлов конфигураций.
 
 ### Economic
-Сервис обработки и хранения внутриигровых валют.
+Система внутриигровых валют, покупок и прочих финансовых операций.
+
+#### Player Money
+Система внутриигровых валют. Содержит методы для операций с основной валютой и с дополнительными валютами.
+
+Взаимодействия с основной валютой вынесены в отдельные оптимизированные методы, т.к. предполагается, что с этой валютой
+операции будут происходить намного чаще чем с другими.
+```csharp
+// Взаимодействие с основной валютой игрока.
+Kernel.Economic.PlayerMoney.Money += 100;
+
+// Добавляет основную валюту. Оптимизированная функция без проверок. Не рекомендуется передавать отрицательные значения.
+Kernel.Economic.PlayerMoney.AddMoney(100);
+
+// Универсальный метод взаимодействия с основной валютой. Принимает любые значения.
+bool success = Kernel.Economic.PlayerMoney.InteractWithMoney(-30);
+```
+
+Дополнительные валюты можно создавать в перечислении MoneyKind.
+```csharp
+// Добавляет дополнительную валюту. Оптимизированная функция без проверок. Не рекомендуется передавать отрицательные значения.
+bool success = Kernel.Economic.PlayerMoney.AddOtherMoney(MoneyKind.Gems, 10);
+
+// Универсальный метод взаимодействия с дополнительной валютой. Принимает любые значения.
+bool success = Kernel.Economic.PlayerMoney.InteractWithOtherMoney(MoneyKind.Gems, 10);
+
+```
 
 ### Inventory
 Сервис для работы с инвентарями. 
